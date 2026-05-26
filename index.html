@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Calculadora</title>
+
+    <style>
+        :root {
+            --bg: linear-gradient(135deg, #0f172a, #581c87);
+            --calc-bg: rgba(15, 23, 42, 0.95);
+            --display-bg: #e2e8f0;
+            --btn-bg: #1e293b;
+            --btn-hover: #334155;
+            --operator: #7c3aed;
+            --equal: #16a34a;
+            --danger: #dc2626;
+            --text: white;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+        .calculadora {
+            width: 100%;
+            max-width: 340px;
+
+            background: var(--calc-bg);
+
+            border-radius: 20px;
+
+            padding: 20px;
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.4);
+
+            backdrop-filter: blur(10px);
+        }
+
+        .titulo {
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .historico {
+            min-height: 20px;
+            color: #94a3b8;
+            text-align: right;
+            margin-bottom: 5px;
+            font-size: 14px;
+
+            overflow-x: auto;
+        }
+
+        .display {
+            width: 100%;
+            height: 70px;
+
+            background: var(--display-bg);
+
+            border-radius: 10px;
+
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+
+            padding: 15px;
+
+            font-size: 32px;
+            font-weight: bold;
+
+            overflow-x: auto;
+            overflow-y: hidden;
+
+            margin-bottom: 15px;
+        }
+
+        .botoes {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            height: 65px;
+
+            border-radius: 12px;
+
+            font-size: 22px;
+            cursor: pointer;
+
+            color: white;
+            background: var(--btn-bg);
+
+            transition:
+                transform 0.15s,
+                background 0.2s;
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operador {
+            background: var(--operator);
+        }
+
+        .igual {
+            background: var(--equal);
+            grid-row: span 2;
+            height: 140px;
+        }
+
+        .limpar {
+            background: var(--danger);
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        @media(max-width: 400px) {
+
+            .display {
+                font-size: 26px;
+            }
+
+            button {
+                height: 55px;
+                font-size: 18px;
+            }
+
+            .igual {
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="calculadora">
+
+        <h1 class="titulo">Calculadora</h1>
+
+        <div class="historico" id="historico"></div>
+
+        <div class="display" id="display">0</div>
+
+        <div class="botoes">
+
+            <button class="limpar" data-action="clear">C</button>
+
+            <button data-action="backspace">⌫</button>
+
+            <button class="operador" data-value="/">÷</button>
+
+            <button class="operador" data-value="*">×</button>
+
+            <button data-value="7">7</button>
+
+            <button data-value="8">8</button>
+
+            <button data-value="9">9</button>
+
+            <button class="operador" data-value="-">−</button>
+
+            <button data-value="4">4</button>
+
+            <button data-value="5">5</button>
+
+            <button data-value="6">6</button>
+
+            <button class="operador" data-value="+">+</button>
+
+            <button data-value="1">1</button>
+
+            <button data-value="2">2</button>
+
+            <button data-value="3">3</button>
+
+            <button class="igual" data-action="calculate">=</button>
+
+            <button class="zero" data-value="0">0</button>
+
+            <button data-value=".">.</button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const display = document.getElementById("display");
+        const historico = document.getElementById("historico");
+
+        let expressao = "";
+
+        const operadores = ["+", "-", "*", "/"];
+
+        function atualizarDisplay() {
+
+            display.textContent = expressao || "0";
+        }
+
+        function adicionarValor(valor) {
+
+            const ultimo = expressao.slice(-1);
+
+            // impedir operadores duplicados
+            if (
+                operadores.includes(valor) &&
+                operadores.includes(ultimo)
+            ) {
+                return;
+            }
+
+            // impedir ponto duplo
+            if (valor === ".") {
+
+                const partes = expressao.split(/[\+\-\*\/]/);
+                const ultimaParte = partes[partes.length - 1];
+
+                if (ultimaParte.includes(".")) {
+                    return;
+                }
+            }
+
+            expressao += valor;
+
+            atualizarDisplay();
+        }
+
+        function limparTudo() {
+
+            expressao = "";
+
+            historico.textContent = "";
+
+            atualizarDisplay();
+        }
+
+        function apagarUltimo() {
+
+            expressao = expressao.slice(0, -1);
+
+            atualizarDisplay();
+        }
+
+        function calcularResultado() {
+
+            if (!expressao) return;
+
+            try {
+
+                const contaOriginal = expressao;
+
+                const resultado = Function(
+                    `"use strict"; return (${expressao})`
+                )();
+
+                if (!isFinite(resultado)) {
+
+                    display.textContent = "Erro";
+
+                    return;
+                }
+
+                historico.textContent =
+                    `${contaOriginal} =`;
+
+                expressao = resultado.toString();
+
+                atualizarDisplay();
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                display.textContent = "Erro";
+            }
+        }
+
+        // clique nos botões
+        document.querySelectorAll("button")
+            .forEach(botao => {
+
+                botao.addEventListener("click", () => {
+
+                    const valor = botao.dataset.value;
+                    const action = botao.dataset.action;
+
+                    if (valor) {
+                        adicionarValor(valor);
+                    }
+
+                    switch (action) {
+
+                        case "clear":
+                            limparTudo();
+                            break;
+
+                        case "backspace":
+                            apagarUltimo();
+                            break;
+
+                        case "calculate":
+                            calcularResultado();
+                            break;
+                    }
+                });
+            });
+
+        // teclado
+        document.addEventListener("keydown", (e) => {
+
+            const tecla = e.key;
+
+            if (!isNaN(tecla) || operadores.includes(tecla)) {
+                adicionarValor(tecla);
+            }
+
+            if (tecla === ".") {
+                adicionarValor(".");
+            }
+
+            if (tecla === "Enter") {
+                calcularResultado();
+            }
+
+            if (tecla === "Backspace") {
+                apagarUltimo();
+            }
+
+            if (tecla === "Escape") {
+                limparTudo();
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>
